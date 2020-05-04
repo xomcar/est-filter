@@ -21,6 +21,7 @@ dInt = resIntegral(tfF)
 that has as input a rational transfer function object tfF. The function
 returns the integral dInt upon the unit circle of tfF computed
 via the residue method.
+
 **Ex 2.2.** Create a function
 [tfCaus,tfACaus] = causalPart(tfG)
 that has as input a rational transfer function object tfG. The function
