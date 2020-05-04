@@ -33,13 +33,14 @@ Use the latter matrices to build the matrixmR:= R.
 cvY2:= y 2 and stack them incvY:= y.
 
 **Ex 3.2.** Create the function
-
+[cvE,mV] = centralMMSE(cvY,mP,mR,mS)
 which has as input the generated realization cvY, the a pri-
 ori covariancemP, the noise covariancemRand the measurement
 matrixmS, and returns the best linear MMSE estimatecvEand the
 variance of the estimation errormVusing the “standard” formula.
 
 **Ex 3.3.** Create the function
+[cvE,mV] = distribMMSE(cvY1,cvY2,mP,mR1,mR2,mS1,mS2)
 which has as inputs the single-system measurement vectors,
 noise covariance matrices and measurement matrices, and returns
 the best linear MMSE estimate cvE and the variance of the
