@@ -1,27 +1,36 @@
 clearvars
 clc
 
+%% Parameters
+MEASURES = 100;
+NOISE_VARIANCE = 100;
+NOISE_AVG = 0;
+STATE_PARAMS = 2;
+ZERO1 = - 0.9;
+ZERO2 = -1.15;
+POLE1 = 0.8 + 0.1j;
+POLE2 = 0.8 - 0.1j;
+
 %% Setting system and realization
-z = tf('z');
-W = (z + 0.9)*(z + 1.15) / ((z - 0.8 + 0.1j)*(z - 0.8 - 0.1j));
-n = rand(1,100);
-t = 0:99;
-x0 = sqrt(100)*rand(2,1);
+W = tf(poly([ZERO1 ZERO2]), poly([POLE1 POLE2]), -1);
+n = rand(1,MEASURES);
+t = 0:MEASURES - 1;
+x0 = NOISE_AVG + sqrt(NOISE_VARIANCE)*rand(STATE_PARAMS,1);
 Sys = ss(W);
-[y, ~, x] = lsim(Sys, n, t, x0);
-y = y'; x = x';
-[A, B, C, D] = ssdata(Sys);
+y = lsim(Sys, n, t, x0)';
+[~, ~, C, ~] = ssdata(Sys);
 
 %% Applying Filters
-XKalman = zeros(2,100);
-XKalmanSS = zeros(2,100);
-[XKalman(:, 1), P] = predKalman(Sys, y(1), x0, sqrt(100) * eye (2));
+XKalman = zeros(STATE_PARAMS,MEASURES);
+XKalmanSS = zeros(STATE_PARAMS,MEASURES);
+YKalmanSS = zeros(STATE_PARAMS,MEASURES);
+[XKalman(:, 1), P] = predKalman(Sys, y(1), x0, NOISE_VARIANCE * eye(STATE_PARAMS));
 [XKalmanSS(:, 1), ~] = predKalmanSS(Sys, y(1), x0);
-for i = 2:100
+for i = 2:MEASURES
     [XKalman(:, i), P] = predKalman(Sys, y(i), XKalman(:, i - 1), P);
     [XKalmanSS(:, i), PSS] = predKalmanSS(Sys, y(i), XKalmanSS(:, i - 1));
 end
-
+[YWiener, varErrW] = WienerPredictor(W, y, 1);
 
 %% Plotting
 close all
@@ -30,4 +39,5 @@ hold on
 plot(t, y(1,:));
 plot(t, C*XKalman);
 plot(t, C*XKalmanSS);
-legend("Misure","Kalman","KalmanSS")
+plot(t, YWiener);
+legend("Misure","Kalman","KalmanSS","Wiener")
