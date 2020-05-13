@@ -42,7 +42,7 @@ function [internal, external] = checkStability(A, B, C, D, type)
     
     %generating minimal realization and extracting poles
     W = minreal(W);
-    [~, d] = tfdata(W);
+    [~, d] = tfdata(W, 'v');
     poles = roots(d);
     
     %evaluating poles for external stability
