@@ -1,3 +1,78 @@
+clearvars
+clc
+
+%% Parameters
+MEASURES = 100;
+MEASURES_PARAMS = 1;
+NOISE_VARIANCE = 100;
+NOISE_AVG = 0;
+STATE_PARAMS = 2;
+ZERO1 = - 0.9;
+ZERO2 = -1.15;
+POLE1 = 0.8 + 0.1j;
+POLE2 = 0.8 - 0.1j;
+ERR_VAR0 = 1;
+
+%% Setting system and realization
+W = tf(poly([ZERO1 ZERO2]), poly([POLE1 POLE2]), -1);
+n = randn(MEASURES_PARAMS,MEASURES);
+t = 0:MEASURES - 1;
+x0 = NOISE_AVG + sqrt(NOISE_VARIANCE)*randn(STATE_PARAMS,1);
+Sys = ss(W);
+y = lsim(Sys, n, t, x0)';
+[~, ~, C, D] = ssdata(Sys);
+
+%% Applying Filters
+XKalman = zeros(STATE_PARAMS,MEASURES);
+XKalmanSS = zeros(STATE_PARAMS,MEASURES);
+YKalmanSS = zeros(MEASURES_PARAMS,MEASURES);
+[XKalman(:, 1), P] = predKalman(Sys, y(1), x0, ERR_VAR0 * eye(STATE_PARAMS));
+[XKalmanSS(:, 1), ~] = predKalmanSS(Sys, y(1), x0);
+for i = 2:MEASURES
+    [XKalman(:, i), P] = predKalman(Sys, y(i), XKalman(:, i - 1), P);
+    [XKalmanSS(:, i), PSS] = predKalmanSS(Sys, y(i), XKalmanSS(:, i - 1));
+end
+[YWiener, varErrW] = WienerPredictor(W*W', y, 1);
+YWiener = real(YWiener');
+
+%% Plotting
+close all
+figure()
+subplot(3,1,1)
+hold on
+plot(t, y(1,:), 'r');
+plot(t, C*XKalman, 'g');
+legend("Realization", "Kalman 1 step")
+subplot(3,1,2)
+hold on
+plot(t, y(1,:), 'r');
+plot(t, C*XKalmanSS, 'b');
+legend("Realization", "KalmanSS 1 step")
+subplot(3,1,3)
+hold on
+plot(t, y(1,:), 'r');
+plot(t, YWiener, 'k');
+legend("Realization", "Wiener 1 step")
+
+%% Comparing Wiener as a particular KalmanSS case
+R = D*D';
+LambdaInf = C * PSS * C'+ R;
+LamdaInfSQRT = sqrt(LambdaInf);
+
+%% Computing and printing transfer functions
+WN = tf(Sys) * LamdaInfSQRT
+L = spectralFactor(W*W')
+
+%% Plotting
+figure()
+hold on
+plot(impulse(L));
+plot(impulse(WN));
+legend("MP spectral factor of W*W'", "Transfer function of innovation on KSS")
+
+
+%% Local function
+
 function [pred,varErr] = WienerPredictor(tranFun, realizY, kStep)
 
 %computing spectral factor
@@ -74,3 +149,4 @@ lambda = sqrt(lambda2);
 %compute spectral factorization
 L = z^(n-m) * lambda * L;
 end
+

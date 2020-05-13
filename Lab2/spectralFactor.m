@@ -10,7 +10,7 @@ lambda2 = gain;
 L = 1;
 
 %numerator denumerator degrees
-m = 1; n = 1;
+m = 0; n = 0;
 z = tf('z');
 
 %extract marg stab zeroes, compute numerator of lambda
@@ -22,7 +22,7 @@ for i = 1:length(zeros)
         %compute zero in numerator count
         m = m + 1;
         %update lambda2
-        lambda2 = lambda2 * (-1/zeros(i));
+        lambda2 = lambda2 * (-zeros(i));
     end
 end
 
@@ -35,7 +35,7 @@ for i = 1:length(poles)
         %compute pole in denumerator count
         n = n + 1;
         %update lambda2
-        lambda2 = lambda2 / (-1/poles(i));
+        lambda2 = lambda2 / (-poles(i));
     end
 end
 
